@@ -34,18 +34,17 @@ const chart = lightningChart({
             resourcesBaseUrl: new URL(document.head.baseURI).origin + new URL(document.head.baseURI).pathname + 'resources/',
         })
     .ChartXY({
+        defaultAxisX: { type: 'linear-highPrecision' },
         theme: Themes[new URLSearchParams(window.location.search).get('theme') || 'darkGold'] || undefined,
     })
     .setTitle('Scrolling Heatmap Spectrogram')
-chart
-    .getDefaultAxisX()
-    .setTitle('Time')
+chart.axisX
     // Setup progressive scrolling Axis.
     .setScrollStrategy(AxisScrollStrategies.progressive)
     .setDefaultInterval((state) => ({ end: state.dataMax, start: (state.dataMax ?? 0) - viewMs, stopAxisAfter: false }))
-    .setTickStrategy(AxisTickStrategies.Time)
+    .setTickStrategy(AxisTickStrategies.DateTime)
 
-chart.getDefaultAxisY().setTitle('Frequency').setUnits('Hz').setInterval({ start: 0, end: dataSampleSize })
+chart.axisY.setTitle('Frequency').setUnits('Hz').setInterval({ start: 0, end: dataSampleSize })
 
 const theme = chart.getTheme()
 // Setup PalettedFill for dynamically coloring Heatmap by Intensity values.
@@ -62,7 +61,6 @@ const heatmapSeries = chart
         scrollDimension: 'columns',
         resolution: dataSampleSize,
     })
-    .setStart({ x: 0, y: 0 })
     .setStep({ x: heatmapMinTimeStepMs, y: 1 })
     .setFillStyle(paletteFill)
     .setWireframeStyle(emptyLine)
@@ -82,9 +80,14 @@ const legend = chart
     })
     .add(chart)
 
+let tFirstSample
 const handleIncomingData = (timestamp, sample) => {
+    if (!tFirstSample) {
+        tFirstSample = timestamp
+        heatmapSeries.setStart({ x: timestamp, y: 0 })
+    }
     // Calculate sample index from timestamp to place sample in correct location in heatmap.
-    const iSample = Math.round(timestamp / heatmapMinTimeStepMs)
+    const iSample = Math.round((timestamp - tFirstSample) / heatmapMinTimeStepMs)
     heatmapSeries.invalidateIntensityValues({
         iSample,
         values: [sample],
@@ -104,10 +107,10 @@ createSpectrumDataGenerator()
     })
     .then((data) => {
         let iData = 0
-        let tPrev = window.performance.now()
+        let tPrev = Date.now()
         let dModulus = 0
         const streamData = () => {
-            const tNow = window.performance.now()
+            const tNow = Date.now()
             let addDataPointCount = ((tNow - tPrev) * sampleRateHz) / 1000 + dModulus
             dModulus = addDataPointCount % 1
             addDataPointCount = Math.floor(addDataPointCount)
