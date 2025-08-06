@@ -12,7 +12,6 @@ const {
     emptyLine,
     AxisScrollStrategies,
     AxisTickStrategies,
-    LegendBoxBuilders,
     regularColorSteps,
     Themes,
 } = lcjs
@@ -40,7 +39,7 @@ const chart = lightningChart({
     .setTitle('Scrolling Heatmap Spectrogram')
 chart.axisX
     // Setup progressive scrolling Axis.
-    .setScrollStrategy(AxisScrollStrategies.progressive)
+    .setScrollStrategy(AxisScrollStrategies.scrolling)
     .setDefaultInterval((state) => ({ end: state.dataMax, start: (state.dataMax ?? 0) - viewMs, stopAxisAfter: false }))
     .setTickStrategy(AxisTickStrategies.DateTime)
 
@@ -69,16 +68,6 @@ const heatmapSeries = chart
         // Out of view data can be lazily removed as long as total columns count remains over 1000.
         minDataPointCount: 1000,
     })
-
-// Add LegendBox to chart.
-const legend = chart
-    .addLegendBox(LegendBoxBuilders.HorizontalLegendBox)
-    // Dispose example UI elements automatically if they take too much space. This is to avoid bad UI on mobile / etc. devices.
-    .setAutoDispose({
-        type: 'max-width',
-        maxWidth: 0.8,
-    })
-    .add(chart)
 
 let tFirstSample
 const handleIncomingData = (timestamp, sample) => {
