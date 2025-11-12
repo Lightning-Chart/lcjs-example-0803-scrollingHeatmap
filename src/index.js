@@ -5,16 +5,7 @@
 const lcjs = require('@lightningchart/lcjs')
 
 // Extract required parts from LightningChartJS.
-const {
-    lightningChart,
-    PalettedFill,
-    LUT,
-    emptyLine,
-    AxisScrollStrategies,
-    AxisTickStrategies,
-    regularColorSteps,
-    Themes,
-} = lcjs
+const { lightningChart, PalettedFill, LUT, emptyLine, AxisScrollStrategies, AxisTickStrategies, regularColorSteps, Themes } = lcjs
 
 const { createSpectrumDataGenerator } = require('@lightningchart/xydata')
 
@@ -63,6 +54,8 @@ const heatmapSeries = chart
     .setStep({ x: heatmapMinTimeStepMs, y: 1 })
     .setFillStyle(paletteFill)
     .setWireframeStyle(emptyLine)
+    .setIntensityInterpolation('disabled')
+    .setAggregation('max')
     // Configure automatic data cleaning.
     .setDataCleaning({
         // Out of view data can be lazily removed as long as total columns count remains over 1000.
